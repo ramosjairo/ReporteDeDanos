@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Inspección - Módulos</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            background: #f4f4f9; 
+            color: #333; 
+            display: flex;
+            justify-content: center;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border: 2px solid #0056b3;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .header-title { 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: #0056b3; 
+            margin-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        .school-badge {
+            font-size: 11px;
+            background: #eef2f7;
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: #333;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .module-card {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .module-card:hover {
+            border-color: #0056b3;
+            background: #f8fbff;
+            transform: translateY(-2px);
+        }
+        .module-icon {
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+        .module-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .record-badge {
+            font-size: 10px;
+            background: #eef2f7;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .total-qty {
+            font-size: 12px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .btn-zip {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .btn-zip:hover { background: #e0a800; }
+
+        .btn-home {
+            background: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-home:hover { background: #004085; }
+
+        .footer-info {
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            margin-top: 15px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 8px;
+        }
+    </style>
+    <!-- Carga Local JSZip Offline -->
+    <script src="jszip.min.js"></script>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="header-title">
+            <span>📋 Paneles de Inspección</span>
+            <span class="school-badge" id="lblSchool">Escuela: ...</span>
+        </div>
+
+        <!-- Módulos principales -->
+        <div class="modules-grid" id="modulesGrid">
+            <!-- Cargados dinámicamente -->
+        </div>
+
+        <!-- Botones de Acción al Final -->
+        <button class="btn-zip" onclick="confirmarYGenerarZIP()">📦 Exportar Paquete ZIP General</button>
+        <button class="btn-home" onclick="volverInicio()">🏠 Volver a Inicio</button>
+
+        <div class="footer-info">
+            by Jairo Ramos | v1.0
+        </div>
+    </div>
+
+    <script>
+        const schoolCode = localStorage.getItem('school_code') || '125';
+        document.getElementById('lblSchool').innerText = `Escuela: ${schoolCode}`;
+
+        const modulesData = [
+            { key: 'P2', title: 'Reparaciones Lineales (P2)', icon: '📏', unit: 'm', sumField: 'length_P2' },
+            { key: 'W1', title: 'Reparación de Paredes (W1)', icon: '🧱', unit: 'm', sumField: 'length_w' },
+            { key: 'P1', title: 'Frisos Paños Mayores (P1)', icon: '🎨', unit: 'm²', sumField: 'area_PC_P1' },
+            { key: 'S1', title: 'Reparación Columnas (S1)', icon: '🏛️', unit: 'm', sumField: 'height_S1' },
+            { key: 'S4', title: 'Sustitución Columnas (S4)', icon: '🏗️', unit: 'm', sumField: 'height_S4' },
+            { key: 'S5', title: 'Reparación de Vigas (S5)', icon: '🪵', unit: 'm', sumField: 'length_S5' },
+            { key: 'S3', title: 'Sustitución de Vigas (S3)', icon: '🏗️', unit: 'm', sumField: 'length_S3' },
+            { key: 'F1', title: 'Daños en Pisos (F1)', icon: '🏗️', unit: 'm²', sumField: 'floor_area' }
+        ];
+
+        // IndexedDB Core
+        const DB_NAME = 'InspeccionAppDB';
+        const DB_VERSION = 1;
+        const STORES = modulesData.map(m => m.key);
+        let dbInstance = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    STORES.forEach(storeName => {
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName, { keyPath: 'internal_id', autoIncrement: true });
+                        }
+                    });
+                };
+                request.onsuccess = () => {
+                    dbInstance = request.result;
+                    resolve(dbInstance);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function getAllRecords(storeName) {
+            return new Promise((resolve, reject) => {
+                const tx = dbInstance.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function renderMenu() {
+            if (!dbInstance) await initDB();
+            
+            const grid = document.getElementById('modulesGrid');
+            let html = '';
+
+            for (const mod of modulesData) {
+                let registros = [];
+                try {
+                    registros = await getAllRecords(mod.key);
+                } catch (e) {
+                    console.error("Error leyendo IndexedDB para " + mod.key, e);
+                }
+                
+                let count = registros.length;
+                let totalQty = 0;
+                
+                registros.forEach(r => {
+                    let val = parseFloat(r[mod.sumField]);
+                    if (!isNaN(val)) {
+                        totalQty += val;
+                    }
+                });
+
+                html += `
+                    <div class="module-card" onclick="abrirModulo('${mod.key}')">
+                        <div class="module-icon">${mod.icon}</div>
+                        <div class="module-title">${mod.title}</div>
+                        <div class="record-badge">${count} registro(s)</div>
+                        <div class="total-qty">Total: ${totalQty.toFixed(2)} ${mod.unit}</div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function abrirModulo(modKey) {
+            window.location.href = `modulo_formulario.html?mod=${modKey}`;
+        }
+
+        function volverInicio() {
+            window.location.href = "index.html";
+        }
+
+        function confirmarYGenerarZIP() {
+            if (confirm("¿Está seguro de que desea generar y descargar el Paquete ZIP General de Inspección?")) {
+                generarPaqueteZipGlobal();
+            }
+        }
+
+        async function generarPaqueteZipGlobal() {
+            if (!dbInstance) await initDB();
+            
+            const zip = new JSZip();
+
+            // Mapeo entre claves internas y campos del esquema JSON UNESCO
+            const moduleMap = {
+                'W1': { flag: 'w1_Partition_Wall', arrayKey: 'w1_wall_replacement', imgKey: 'wall_image' },
+                'P1': { flag: 'p1_Plaster_Repair', arrayKey: 'p1_Plaster_Repair_Large', imgKey: 'P1_Image' },
+                'P2': { flag: 'p2_Plaster_repair', arrayKey: 'p2_Plaster_Repair_Linear', imgKey: 'P2_Image' },
+                'S1': { flag: 'column_Cover_S1', arrayKey: 's1_column_Repair', imgKey: 'S1_Image' },
+                'S4': { flag: 'column_Replacement_S4', arrayKey: 'S4_column_Replacement', imgKey: 'column_Image' },
+                'S5': { flag: 'column_Cover_S5', arrayKey: 'S5_beam_Repair', imgKey: 'S5_Image' },
+                'S3': { flag: 'beam_Replacement_S3', arrayKey: 'S3_beam_Replacement', imgKey: 'S3_Image' },
+                'F1': { flag: 'floor_damage_F1', arrayKey: 'F1_floor_Damage', imgKey: 'floor_Image' }
+            };
+
+            let assessmentData = {
+                "w1_Partition_Wall": "no",
+                "p1_Plaster_Repair": "no",
+                "p2_Plaster_repair": "no",
+                "column_Cover_S1": "no",
+                "column_Replacement_S4": "no",
+                "column_Cover_S5": "no",
+                "beam_Replacement_S3": "no",
+                "floor_damage_F1": "no",
+                "p2_Plaster_Repair_Linear": [],
+                "w1_wall_replacement": [],
+                "p1_Plaster_Repair_Large": [],
+                "s1_column_Repair": [],
+                "S4_column_Replacement": [],
+                "S5_beam_Repair": [],
+                "S3_beam_Replacement": [],
+                "F1_floor_Damage": []
+            };
+
+            let totalRegistrosGlobales = 0;
+
+            for (const mod of modulesData) {
+                const mapping = moduleMap[mod.key];
+                if (!mapping) continue;
+
+                let registros = [];
+                try {
+                    registros = await getAllRecords(mod.key);
+                } catch (e) {
+                    console.error("Error leyendo IndexedDB para " + mod.key, e);
+                }
+
+                if (registros.length > 0) {
+                    assessmentData[mapping.flag] = "yes";
+                    totalRegistrosGlobales += registros.length;
+
+                    for (const r of registros) {
+                        let obj = { ...r };
+                        
+                        // Eliminar metadatos locales no requeridos en el JSON final
+                        delete obj.internal_id;
+                        delete obj.ubicacion;
+
+                        // Procesar imágenes
+                        let imgKey = mapping.imgKey;
+                        if (obj[imgKey] && Array.isArray(obj[imgKey])) {
+                            let photoNames = [];
+                            for (const fotoObj of obj[imgKey]) {
+                                if (fotoObj && typeof fotoObj === 'object') {
+                                    if (fotoObj.nombre) photoNames.push(fotoObj.nombre);
+                                    if (fotoObj.blob) {
+                                        zip.file(`fotos/${fotoObj.nombre}`, fotoObj.blob);
+                                    }
+                                } else if (typeof fotoObj === 'string') {
+                                    photoNames.push(fotoObj);
+                                }
+                            }
+                            obj[imgKey] = photoNames;
+                        } else {
+                            obj[imgKey] = [];
+                        }
+
+                        assessmentData[mapping.arrayKey].push(obj);
+                    }
+                }
+            }
+
+            if (totalRegistrosGlobales === 0) {
+                alert("No hay registros guardados en ningún módulo para exportar.");
+                return;
+            }
+
+            // Encapsular en la clave principal requerida por el formato UNESCO
+            const finalJSON = {
+                "VEN_UNESCO_X_DHR_Schools_Assessment": assessmentData
+            };
+
+            zip.file(`VEN_UNESCO_X_DHR_Schools_Assessment_${schoolCode}.json`, JSON.stringify(finalJSON, null, 2));
+
+            try {
+                const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `Inspeccion_Escuela_${schoolCode}.zip`;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+            } catch (error) {
+                alert("Ocurrió un error al generar el ZIP: " + error.message);
+                console.error(error);
+            }
+        }
+
+        window.addEventListener('pageshow', function (event) {
+            renderMenu();
+        });
+        
+        renderMenu();
+    </script>
+</body>
+</html>

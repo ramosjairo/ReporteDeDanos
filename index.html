@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inspección - Menú Principal</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            background: #f4f4f9; 
+            color: #333; 
+            display: flex;
+            justify-content: center;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border: 2px solid #0056b3;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .header-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #0056b3; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .section-card {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        label { display: block; margin-top: 8px; font-weight: bold; font-size: 13px; color: #444; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-primary { 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-primary:hover { background: #218838; }
+        
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold;
+        }
+        .btn-secondary:hover { background: #5a6268; }
+
+        .btn-inspection {
+            background: #0056b3;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn-inspection:hover { background: #004085; }
+
+        .footer-info {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="header-title">
+            <span>🏫</span> Datos de la Institución
+        </div>
+
+        <div class="section-card">
+            <label>Código de Escuela:</label>
+            <input type="text" id="schoolCode" value="125" placeholder="Ej. 125">
+
+            <label>Nombre de la Institución:</label>
+            <input type="text" id="schoolName" value="U.E. Nacional Ejemplo" placeholder="Nombre del plantel">
+
+            <label>Fecha de Inspección:</label>
+            <input type="date" id="inspectionDate">
+        </div>
+
+        <!-- Botón que redirige al panel de los 8 iconos -->
+        <button class="btn-inspection" onclick="irAInspeccion()">
+            ➕ Ir a Módulos de Inspección (8)
+        </button>
+
+        <div class="action-row">
+            <button class="btn-primary" onclick="guardarDatosInstitucion()">💾 Guardar Datos</button>
+            <button class="btn-secondary" onclick="resetearDia()">🔄 Nuevo Día</button>
+        </div>
+
+        <div class="footer-info">
+            by Jairo Ramos | v1.0
+        </div>
+    </div>
+
+    <script>
+        // Cargar datos previos si existen
+        if(localStorage.getItem('school_code')) {
+            document.getElementById('schoolCode').value = localStorage.getItem('school_code');
+        }
+        if(localStorage.getItem('school_name')) {
+            document.getElementById('schoolName').value = localStorage.getItem('school_name');
+        }
+        if(localStorage.getItem('inspection_date')) {
+            document.getElementById('inspectionDate').value = localStorage.getItem('inspection_date');
+        } else {
+            document.getElementById('inspectionDate').valueAsDate = new Date();
+        }
+
+        function guardarDatosInstitucion() {
+            const codigo = document.getElementById('schoolCode').value;
+            const nombre = document.getElementById('schoolName').value;
+            const fecha = document.getElementById('inspectionDate').value;
+
+            localStorage.setItem('school_code', codigo);
+            localStorage.setItem('school_name', nombre);
+            localStorage.setItem('inspection_date', fecha);
+
+            alert("¡Datos de la institución guardados correctamente!");
+        }
+
+        function irAInspeccion() {
+            guardarDatosInstitucion();
+            // Salto directo al archivo del panel de los 8 iconos
+            window.location.href = "inspeccion_menu.html";
+        }
+
+        function resetearDia() {
+            if(confirm("¿Desea limpiar los datos para iniciar un nuevo día?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
