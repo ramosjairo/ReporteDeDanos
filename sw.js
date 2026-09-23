@@ -1,7 +1,8 @@
 const CACHE_NAME = 'inspeccion-app-v1';
 const ASSETS_TO_CACHE = [
   './',
-  './modulo_formulario_3.html',
+  './index.html',
+  './modulo_formulario.html',
   './inspeccion_menu.html',
   './jszip.min.js',
   './manifest.json',
