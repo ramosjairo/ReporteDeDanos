@@ -449,12 +449,19 @@ function agregarFotoBorrador(event) {
 
         async function guardarRegistro() {
             if (!dbInstance) await initDB();
+
+            for (let f of currentConfig.fields) {
+                let el = document.getElementById(`field_${f.id}`);
+                if (el) {
+                    if (el.value.trim() === "" && !f.id.includes('notes')) {
+                        alert("El campo '" + f.label + "' es obligatorio.");
+                        el.focus();
+                        return;
+                    }
+                }
+            }
             
             let ubicacionVal = document.getElementById('field_ubicacion').value;
-            if (!ubicacionVal) {
-                alert("Por favor indique la ubicación.");
-                return;
-            }
 
             // Validar estrictamente que exista al menos una foto con archivo válido
             const tieneFotosValidas = draftPhotos.some(p => p && p.blob && p.blob.size > 0);
