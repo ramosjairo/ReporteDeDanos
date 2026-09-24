@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Módulo de Inspección - Detalle</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0056b3">
-    <link rel="apple-touch-icon" href="icono-192.png">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -83,20 +80,6 @@
         }
         .btn-save:hover { background: #218838; }
 
-        .btn-cancel {
-            background: #ffc107;
-            color: #333;
-            border: none;
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 5px;
-            display: none;
-        }
-
         .btn-back { 
             background: #6c757d; 
             color: white; 
@@ -107,25 +90,16 @@
             font-size: 13px; 
             width: 100%;
             font-weight: bold;
-            margin-top: 12px;
+            margin-top: 5px;
         }
         .btn-back:hover { background: #5a6268; }
 
         .calc-field { background: #e9ecef; font-weight: bold; color: #0056b3; }
 
         table { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #ddd; padding: 5px; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 5px; text-align: left; }
         th { background: #e9ecef; }
-        
-        .btn-action { border: none; padding: 3px 5px; border-radius: 3px; cursor: pointer; font-size: 11px; margin: 0 1px; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-edit { background: #ffc107; color: #212529; }
-        .btn-view { background: #17a2b8; color: white; }
-
-        /* Modal para opción Ver */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 15px; border-radius: 8px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .close-modal { float: right; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-danger { background: #dc3545; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; }
         
         .footer-info {
             text-align: center;
@@ -145,10 +119,11 @@
             <span class="school-badge" id="lblSchool">Escuela: ...</span>
         </div>
 
+        <!-- ID Dinámico del Registro -->
         <div class="record-id-title" id="lblRecordId">R-1</div>
 
         <div class="form-card" id="camposDinamicosContainer">
-            <!-- Campos inyectados dinámicamente -->
+            <!-- Los campos específicos de cada módulo se inyectan aquí -->
         </div>
 
         <!-- Carrusel de Fotografías -->
@@ -157,12 +132,12 @@
             <div class="photo-carousel" id="carouselContainer">
                 <div class="photo-add-card" onclick="document.getElementById('fileInput').click()">+</div>
             </div>
-                <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="agregarFotoBorrador(event)">
+            <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="agregarFotoBorrador(event)">
         </div>
 
-        <button class="btn-save" id="btnGuardar" onclick="guardarRegistro()">➕ Agregar Registro</button>
-        <button class="btn-cancel" id="btnCancelarEdicion" onclick="cancelarEdicion()">❌ Cancelar Edición</button>
+        <button class="btn-save" onclick="guardarRegistro()">➕ Agregar Registro</button>
 
+        <!-- Tabla de Registros Guardados -->
         <div style="margin-top: 12px;">
             <strong>Registros guardados (<span id="spanTotalRegistros">0</span>)</strong>
             <div id="tablaRegistrosContainer"></div>
@@ -175,125 +150,119 @@
         </div>
     </div>
 
-    <!-- Modal para Vista Detallada -->
-    <div id="modalVer" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="cerrarModal()">&times;</span>
-            <div id="modalBody"></div>
-        </div>
-    </div>
-
     <script>
+        // Leer el parámetro ?mod=... enviado desde inspeccion_menu.html
         const urlParams = new URLSearchParams(window.location.search);
         const modKey = urlParams.get('mod') || 'P2';
 
         const schoolCode = localStorage.getItem('school_code') || '125';
         document.getElementById('lblSchool').innerText = `Escuela: ${schoolCode}`;
 
+        // Definición completa de la estructura y campos de los 8 módulos
         const moduleConfigs = {
-            'P2': { title: '1. Reparaciones Lineales (P2)', keyValField: 'length_P2', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'length_P2', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_P2', label: 'Notas', type: 'text'}] },
-            'W1': { title: '2. Reparación de Paredes (W1)', keyValField: 'length_w', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'length_w', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'height_w', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'thickness_w', label: 'Espesor [cm]', type: 'number'}, {id: 'wall_Type', label: 'Material', type: 'select', options: [{val: 'ConcreteBlocks', text: 'Bloque de concreto'}, {val: 'HollowClay', text: 'Bloque hueco de arcilla'}, {val: 'FullClay', text: 'Ladrillo macizo de arcilla'}, {val: 'LightFrame', text: 'Perfil metálico y lámina de yeso'}]}, {id: 'finishing', label: 'Acabado', type: 'select', options: [{val: 'Plaster both wall sides', text: 'Frisada en ambas caras'}, {val: 'Tiles both wall sides', text: 'Cerámico en ambas caras'}, {val: 'One side plaster and one side tiles', text: 'Una cara frisada y otra cerámica'}]}, {id: 'notes_w', label: 'Notas', type: 'text'}] },
-            'P1': { title: '3. Frisos de Paños Mayores (P1)', keyValField: 'area_PC_P1', keyValLabel: 'Área (m²)', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'width_P1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, {id: 'length_P1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, {id: 'notes_P1', label: 'Notas', type: 'text'}], hasArea: true },
-            'S1': { title: '4. Reparación de Columnas (S1)', keyValField: 'height_S1', keyValLabel: 'Altura', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S1', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S1', label: 'Lado 2 [cm]', type: 'number'}, {id: 'height_S1', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'notes_S1', label: 'Notas', type: 'text'}] },
-            'S4': { title: '5. Sustitución de Columnas (S4)', keyValField: 'height_S4', keyValLabel: 'Altura', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S4', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S4', label: 'Lado 2 [cm]', type: 'number'}, {id: 'height_S4', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'notes_column', label: 'Notas', type: 'text'}] },
-            'S5': { title: '6. Reparación de Vigas (S5)', keyValField: 'length_S5', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S5', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S5', label: 'Lado 2 [cm]', type: 'number'}, {id: 'length_S5', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_S5', label: 'Notas', type: 'text'}] },
-            'S3': { title: '7. Sustitución de Vigas (S3)', keyValField: 'length_S3', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S3', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S3', label: 'Lado 2 [cm]', type: 'number'}, {id: 'length_S3', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_S3', label: 'Notas', type: 'text'}] },
-            'F1': { title: '8. Daños en Pisos (F1)', keyValField: 'floor_area', keyValLabel: 'Área (m²)', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'width_F1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, {id: 'length_F1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, {id: 'notes_floor', label: 'Notas', type: 'text'}], hasArea: true }
+            'P2': {
+                title: '1. Reparaciones Lineales (P2)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'length_P2', label: 'Longitud [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_P2', label: 'Notas', type: 'text'}
+                ]
+            },
+            'W1': {
+                title: '2. Reparación de Paredes (W1)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'length_w', label: 'Longitud [m]', type: 'number', step: '0.01'},
+                    {id: 'height_w', label: 'Altura [m]', type: 'number', step: '0.01'},
+                    {id: 'thickness_w', label: 'Espesor [cm]', type: 'number'},
+                    {id: 'wall_Type', label: 'Material', type: 'select', options: [
+                        {val: 'ConcreteBlocks', text: 'Bloque de concreto'},
+                        {val: 'HollowClay', text: 'Bloque hueco de arcilla'},
+                        {val: 'FullClay', text: 'Ladrillo macizo de arcilla'},
+                        {val: 'LightFrame', text: 'Perfil metálico y lámina de yeso'}
+                    ]},
+                    {id: 'finishing', label: 'Acabado', type: 'select', options: [
+                        {val: 'Plaster both wall sides', text: 'Frisada en ambas caras'},
+                        {val: 'Tiles both wall sides', text: 'Cerámico en ambas caras'},
+                        {val: 'One side plaster and one side tiles', text: 'Una cara frisada y otra cerámica'}
+                    ]},
+                    {id: 'notes_w', label: 'Notas', type: 'text'}
+                ]
+            },
+            'P1': {
+                title: '3. Frisos de Paños Mayores (P1)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'width_P1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true},
+                    {id: 'length_P1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true},
+                    {id: 'notes_P1', label: 'Notas', type: 'text'}
+                ],
+                hasArea: true
+            },
+            'S1': {
+                title: '4. Reparación de Columnas (S1)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'side1_S1', label: 'Lado 1', type: 'number'},
+                    {id: 'side2_S1', label: 'Lado 2', type: 'number'},
+                    {id: 'height_S1', label: 'Altura [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_S1', label: 'Notas', type: 'text'}
+                ]
+            },
+            'S4': {
+                title: '5. Sustitución de Columnas (S4)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'side1_S4', label: 'Lado 1', type: 'number'},
+                    {id: 'side2_S4', label: 'Lado 2', type: 'number'},
+                    {id: 'height_S4', label: 'Altura [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_column', label: 'Notas', type: 'text'}
+                ]
+            },
+            'S5': {
+                title: '6. Reparación de Vigas (S5)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'side1_S5', label: 'Lado 1', type: 'number'},
+                    {id: 'side2_S5', label: 'Lado 2', type: 'number'},
+                    {id: 'length_S5', label: 'Longitud [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_S5', label: 'Notas', type: 'text'}
+                ]
+            },
+            'S3': {
+                title: '7. Sustitución de Vigas (S3)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'side1_S3', label: 'Lado 1', type: 'number'},
+                    {id: 'side2_S3', label: 'Lado 2', type: 'number'},
+                    {id: 'length_S3', label: 'Longitud [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_S3', label: 'Notas', type: 'text'}
+                ]
+            },
+            'F1': {
+                title: '8. Daños en Pisos (F1)',
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'},
+                    {id: 'width_F1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true},
+                    {id: 'length_F1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true},
+                    {id: 'notes_floor', label: 'Notas', type: 'text'}
+                ],
+                hasArea: true
+            }
         };
 
         const currentConfig = moduleConfigs[modKey] || moduleConfigs['P2'];
         document.getElementById('lblModuloTitulo').innerText = currentConfig.title;
 
+        // Estado local de fotos para este formulario
         let draftPhotos = [];
-        let currentEditingId = null;
 
-        // IndexedDB Core
-        const DB_NAME = 'InspeccionAppDB';
-        const DB_VERSION = 1;
-        const STORES = Object.keys(moduleConfigs);
-        let dbInstance = null;
-
-        function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    STORES.forEach(storeName => {
-                        if (!db.objectStoreNames.contains(storeName)) {
-                            db.createObjectStore(storeName, { keyPath: 'internal_id', autoIncrement: true });
-                        }
-                    });
-                };
-                request.onsuccess = () => {
-                    dbInstance = request.result;
-                    resolve(dbInstance);
-                };
-                request.onerror = () => reject(request.error);
-            });
+        // Cargar registros existentes en localStorage
+        function getRegistros() {
+            return JSON.parse(localStorage.getItem(`db_${modKey}`) || '[]');
         }
 
-        function getAllRecords(storeName) {
-            return new Promise((resolve, reject) => {
-                const tx = dbInstance.transaction(storeName, 'readonly');
-                const store = tx.objectStore(storeName);
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function addRecord(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const tx = dbInstance.transaction(storeName, 'readwrite');
-                const store = tx.objectStore(storeName);
-                const request = store.add(data);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function updateRecord(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const tx = dbInstance.transaction(storeName, 'readwrite');
-                const store = tx.objectStore(storeName);
-                const request = store.put(data);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function deleteRecord(storeName, internalId) {
-            return new Promise((resolve, reject) => {
-                const tx = dbInstance.transaction(storeName, 'readwrite');
-                const store = tx.objectStore(storeName);
-                const request = store.delete(internalId);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function getImgKey(key) {
-            return {'P2':'P2_Image', 'W1':'wall_image', 'P1':'P1_Image', 'S1':'S1_Image', 'S4':'column_Image', 'S5':'S5_Image', 'S3':'S3_Image', 'F1':'floor_Image'}[key];
-        }
-
-        function getNextSequence(regs) {
-            let max = 0;
-            if (regs.length > 0) {
-                regs.forEach(r => {
-                    let idKey = Object.keys(r).find(k => k.includes('Number') || k.includes('Replacement'));
-                    if (idKey && r[idKey]) {
-                        let parts = r[idKey].toString().split('-');
-                        let num = parseInt(parts[1]) || 0;
-                        if (num > max) max = num;
-                    }
-                });
-            }
-            return max + 1;
-        }
-
-        async function renderFormulario() {
-            if (!dbInstance) await initDB();
-
+        function renderFormulario() {
             const container = document.getElementById('camposDinamicosContainer');
             let html = '';
 
@@ -304,12 +273,8 @@
                     f.options.forEach(opt => html += `<option value="${opt.val}">${opt.text}</option>`);
                     html += `</select>`;
                 } else {
-                    let extra = f.calc ? `oninput="calcularArea(); guardarBorradorTemporal();"` : `oninput="guardarBorradorTemporal()"`;
-                    
-                    // Atributo para forzar teclado numérico (decimal si usa decimales, numérico si es entero)
-                    let inputModeAttr = f.type === 'number' ? (f.step ? 'inputmode="decimal"' : 'inputmode="numeric"') : '';
-
-                    html += `<input type="${f.type || 'text'}" id="field_${f.id}" ${f.step ? 'step="'+f.step+'"' : ''} ${inputModeAttr} ${extra}>`;
+                    let extra = f.calc ? `oninput="calcularArea()"` : '';
+                    html += `<input type="${f.type || 'text'}" id="field_${f.id}" ${f.step ? 'step="'+f.step+'"' : ''} ${extra}>`;
                 }
             });
 
@@ -319,15 +284,12 @@
 
             container.innerHTML = html;
 
-            let regs = await getAllRecords(modKey);
-            if (currentEditingId === null) {
-                let seq = getNextSequence(regs);
-                document.getElementById('lblRecordId').innerText = `${modKey}-R-${seq}`;
-            }
+            // Actualizar ID dinámico correlativo (Ej: R-1, R-2)
+            let regs = getRegistros();
+            document.getElementById('lblRecordId').innerText = `${modKey}-R-${regs.length + 1}`;
             
             renderCarrusel();
-            await cargarBorradorTemporal(); // <-- AGREGAR ESTA LÍNEA
-            await renderTabla();
+            renderTabla();
         }
 
         function calcularArea() {
@@ -342,69 +304,26 @@
             }
         }
 
-        function resizeImageToBlob(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1280;
-                    const MAX_HEIGHT = 1280;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    canvas.toBlob((blob) => {
-                        callback(blob);
-                    }, 'image/jpeg', 0.75);
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-        }
-
-function agregarFotoBorrador(event) {
-            const files = Array.from(event.target.files);
-            if (files && files.length > 0) {
-                let procesadas = 0;
-                files.forEach(file => {
-                    resizeImageToBlob(file, function(blob) {
-                        const objectUrl = URL.createObjectURL(blob);
-                        draftPhotos.push({
-                            blob: blob,
-                            previewUrl: objectUrl
-                        });
-                        procesadas++;
-                        if (procesadas === files.length) {
-                            renderCarrusel();
-                            guardarBorradorTemporal();
-                        }
+        function agregarFotoBorrador(event) {
+            const files = event.target.files;
+            if (files && files[0]) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    draftPhotos.push({
+                        fileObj: file,
+                        preview: e.target.result,
+                        name: file.name
                     });
-                });
-                event.target.value = '';
+                    renderCarrusel();
+                };
+                reader.readAsDataURL(file);
             }
         }
 
         function eliminarFotoBorrador(index) {
-            URL.revokeObjectURL(draftPhotos[index].previewUrl);
             draftPhotos.splice(index, 1);
             renderCarrusel();
-            guardarBorradorTemporal();
         }
 
         function renderCarrusel() {
@@ -412,7 +331,7 @@ function agregarFotoBorrador(event) {
             let html = '';
             draftPhotos.forEach((photo, idx) => {
                 html += `<div class="photo-thumb-container">
-                    <img src="${photo.previewUrl}" alt="Foto">
+                    <img src="${photo.preview}" alt="Foto">
                     <button class="photo-delete-btn" onclick="eliminarFotoBorrador(${idx})">✕</button>
                 </div>`;
             });
@@ -420,39 +339,14 @@ function agregarFotoBorrador(event) {
             container.innerHTML = html;
         }
 
-        async function guardarRegistro() {
-            if (!dbInstance) await initDB();
-            
-            let ubicacionVal = document.getElementById('field_ubicacion').value;
-            if (!ubicacionVal) {
-                alert("Por favor indique la ubicación.");
-                return;
-            }
-
-            // Validar estrictamente que exista al menos una foto con archivo válido
-            const tieneFotosValidas = draftPhotos.some(p => p && p.blob && p.blob.size > 0);
-            if (!tieneFotosValidas) {
-                alert("Debe incluir al menos una fotografía válida antes de guardar.");
-                return;
-            }
-
-            let regs = await getAllRecords(modKey);
-            let idString = "";
-
-            if (currentEditingId !== null) {
-                let regExistente = regs.find(r => r.internal_id === currentEditingId);
-                let idKey = Object.keys(regExistente).find(k => k.includes('Number') || k.includes('Replacement'));
-                idString = regExistente[idKey];
-            } else {
-                let seq = getNextSequence(regs);
-                idString = `R-${seq}`;
-            }
+        function guardarRegistro() {
+            let regs = getRegistros();
+            let seq = regs.length + 1;
+            let idString = `R-${seq}`;
 
             let nuevoRegistro = {};
-            if (currentEditingId !== null) {
-                nuevoRegistro.internal_id = currentEditingId;
-            }
-
+            
+            // Asignar ID según nomenclatura del módulo
             if (modKey === 'P2') nuevoRegistro.P2_Number = idString;
             if (modKey === 'W1') nuevoRegistro.W1_Number = idString;
             if (modKey === 'P1') nuevoRegistro.P1_Number = idString;
@@ -462,6 +356,11 @@ function agregarFotoBorrador(event) {
             if (modKey === 'S3') nuevoRegistro.beam_Number = idString;
             if (modKey === 'F1') nuevoRegistro.floor_Number = idString;
 
+            let ubicacionVal = document.getElementById('field_ubicacion').value;
+            if (!ubicacionVal) {
+                alert("Por favor indique la ubicación.");
+                return;
+            }
             nuevoRegistro.ubicacion = ubicacionVal;
 
             currentConfig.fields.forEach(f => {
@@ -475,40 +374,33 @@ function agregarFotoBorrador(event) {
             if (modKey === 'P1') nuevoRegistro.area_PC_P1 = parseFloat(document.getElementById('field_area_display').value) || 0;
             if (modKey === 'F1') nuevoRegistro.floor_area = parseFloat(document.getElementById('field_area_display').value) || 0;
 
-            let imgKey = getImgKey(modKey);
-            let fotosGuardadas = [];
+            // Procesar nombres de fotos
+            let fotoNombres = [];
+            draftPhotos.forEach((item, idx) => {
+                let formattedName = `${schoolCode}_${modKey}_${idString}-${idx+1}.jpg`;
+                fotoNombres.push(formattedName);
+            });
 
-            for (let idx = 0; idx < draftPhotos.length; idx++) {
-                const item = draftPhotos[idx];
-                let filename = item.nombre || `${schoolCode}_${modKey}_${idString}_${idx+1}.jpg`;
-                
-                fotosGuardadas.push({
-                    nombre: filename,
-                    blob: item.blob
-                });
-            }
+            let imgKey = {'P2':'P2_Image', 'W1':'wall_image', 'P1':'P1_Image', 'S1':'S1_Image', 'S4':'column_Image', 'S5':'S5_Image', 'S3':'S3_Image', 'F1':'floor_Image'}[modKey];
+            nuevoRegistro[imgKey] = fotoNombres;
+            
+            // Guardar objetos de archivos en base64 para poder exportarlos luego en el ZIP
+            nuevoRegistro.rawFiles = draftPhotos.map((p, idx) => ({
+                name: `${schoolCode}_${modKey}_${idString}-${idx+1}.jpg`,
+                preview: p.preview
+            }));
 
-            nuevoRegistro[imgKey] = fotosGuardadas;
+            regs.push(nuevoRegistro);
+            localStorage.setItem(`db_${modKey}`, JSON.stringify(regs));
 
-            try {
-                if (currentEditingId !== null) {
-                    await updateRecord(modKey, nuevoRegistro);
-                    alert("¡Registro actualizado con éxito!");
-                } else {
-                    await addRecord(modKey, nuevoRegistro);
-                    alert("¡Registro guardado con éxito!");
-                }
-            } catch (e) {
-                alert("Error al guardar en IndexedDB: " + e.message);
-                return;
-            }
-
-            // Limpia el borrador, resetea las fotos y calcula el nuevo correlativo automáticamente
-            resetearFormularioPostGuardado();
+            // Limpiar borrador de fotos y recargar formulario
+            draftPhotos = [];
+            renderFormulario();
+            alert("¡Registro guardado con éxito!");
         }
 
-        async function renderTabla() {
-            let regs = await getAllRecords(modKey);
+        function renderTabla() {
+            let regs = getRegistros();
             document.getElementById('spanTotalRegistros').innerText = regs.length;
             const container = document.getElementById('tablaRegistrosContainer');
 
@@ -517,149 +409,27 @@ function agregarFotoBorrador(event) {
                 return;
             }
 
-            let html = `<table><tr>
-                <th>ID</th>
-                <th>Ubicación</th>
-                <th>Fotos</th>
-                <th>${currentConfig.keyValLabel}</th>
-                <th>Acción</th>
-            </tr>`;
-
-            regs.forEach((r) => {
+            let html = `<table><tr><th>ID</th><th>Ubicación</th><th>Fotos</th><th>Acción</th></tr>`;
+            regs.forEach((r, index) => {
                 let idKey = Object.keys(r).find(k => k.includes('Number') || k.includes('Replacement'));
-                let imgKey = getImgKey(modKey);
-                let imgCount = (r[imgKey] || []).length;
-                let valorClave = r[currentConfig.keyValField] !== undefined ? r[currentConfig.keyValField] : '-';
-
+                let imgCount = (r.rawFiles || []).length;
                 html += `<tr>
-                    <td><b>${r[idKey] || 'N/A'}</b></td>
+                    <td><b>${r[idKey]}</b></td>
                     <td>${r.ubicacion}</td>
                     <td>${imgCount} foto(s)</td>
-                    <td>${valorClave}</td>
-                    <td style="white-space:nowrap;">
-                        <button class="btn-action btn-danger" title="Eliminar" onclick="eliminarRegistro(${r.internal_id})">🗑️</button>
-                        <button class="btn-action btn-edit" title="Editar" onclick="editarRegistro(${r.internal_id})">✏️</button>
-                        <button class="btn-action btn-view" title="Ver" onclick="verRegistro(${r.internal_id})">👁️</button>
-                    </td>
+                    <td><button class="btn-danger" onclick="eliminarRegistro(${index})">🗑️</button></td>
                 </tr>`;
             });
             html += `</table>`;
             container.innerHTML = html;
         }
 
-        async function editarRegistro(internalId) {
-            let regs = await getAllRecords(modKey);
-            let reg = regs.find(r => r.internal_id === internalId);
-            if (!reg) return;
-
-            currentEditingId = internalId;
-            let idKey = Object.keys(reg).find(k => k.includes('Number') || k.includes('Replacement'));
-            document.getElementById('lblRecordId').innerText = `${modKey}-${reg[idKey]}`;
-
-            document.getElementById('btnGuardar').innerText = "💾 Actualizar Registro";
-            document.getElementById('btnCancelarEdicion').style.display = "block";
-
-            document.getElementById('field_ubicacion').value = reg.ubicacion || '';
-            currentConfig.fields.forEach(f => {
-                if (f.id === 'ubicacion') return;
-                let el = document.getElementById(`field_${f.id}`);
-                if (el) el.value = reg[f.id] !== undefined ? reg[f.id] : '';
-            });
-
-            if (currentConfig.hasArea) calcularArea();
-
-            let imgKey = getImgKey(modKey);
-            draftPhotos.forEach(p => URL.revokeObjectURL(p.previewUrl));
-            draftPhotos = [];
-
-            if (reg[imgKey] && Array.isArray(reg[imgKey])) {
-                reg[imgKey].forEach(f => {
-                    // Soporta tanto objetos { blob, nombre } como Blobs directos
-                    let actualBlob = f.blob || (f instanceof Blob ? f : null);
-                    if (actualBlob) {
-                        draftPhotos.push({
-                            blob: actualBlob,
-                            previewUrl: URL.createObjectURL(actualBlob),
-                            nombre: f.nombre || `${schoolCode}_${modKey}_photo`
-                        });
-                    }
-                });
-            }
-            renderCarrusel();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function verRegistro(internalId) {
-            let regs = await getAllRecords(modKey);
-            let reg = regs.find(r => r.internal_id === internalId);
-            if (!reg) return;
-
-            let idKey = Object.keys(reg).find(k => k.includes('Number') || k.includes('Replacement'));
-            let imgKey = getImgKey(modKey);
-
-            let content = `<h3 style="margin-top:0; color:#0056b3;">${modKey}-${reg[idKey]}</h3>`;
-            content += `<p style="font-size:13px;"><b>Ubicación:</b> ${reg.ubicacion}</p>`;
-
-            currentConfig.fields.forEach(f => {
-                if (f.id === 'ubicacion') return;
-                content += `<p style="font-size:13px;"><b>${f.label}:</b> ${reg[f.id] !== undefined ? reg[f.id] : ''}</p>`;
-            });
-
-            if (modKey === 'P1') content += `<p style="font-size:13px;"><b>Área:</b> ${reg.area_PC_P1} m²</p>`;
-            if (modKey === 'F1') content += `<p style="font-size:13px;"><b>Área:</b> ${reg.floor_area} m²</p>`;
-
-            let photosHtml = '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">';
-            if (reg[imgKey] && reg[imgKey].length > 0) {
-                reg[imgKey].forEach(f => {
-                    if (f.blob) {
-                        let url = URL.createObjectURL(f.blob);
-                        photosHtml += `<img src="${url}" style="width:100%; max-width:350px; border-radius:6px; border:1px solid #ccc; display:block; margin-bottom:5px;">`;
-                    }
-                });
-            } else {
-                photosHtml += '<p style="font-size:12px; color:#888;">No hay fotografías adjuntas.</p>';
-            }
-            photosHtml += '</div>';
-
-            document.getElementById('modalBody').innerHTML = content + photosHtml;
-            document.getElementById('modalVer').style.display = 'flex';
-        }
-
-        function cerrarModal() {
-            document.getElementById('modalVer').style.display = 'none';
-        }
-
-        function cancelarEdicion() {
-            currentEditingId = null;
-            document.getElementById('btnGuardar').innerText = "➕ Agregar Registro";
-            document.getElementById('btnCancelarEdicion').style.display = "none";
-            
-            draftPhotos.forEach(p => URL.revokeObjectURL(p.previewUrl));
-            draftPhotos = [];
-
-            document.getElementById('field_ubicacion').value = '';
-            currentConfig.fields.forEach(f => {
-                if (f.id === 'ubicacion') return;
-                let el = document.getElementById(`field_${f.id}`);
-                if (el) el.value = '';
-            });
-
-            if (currentConfig.hasArea) {
-                document.getElementById('field_area_display').value = '0.00';
-            }
-
-            renderFormulario();
-        }
-
-        async function eliminarRegistro(internalId) {
-            if(confirm("¿Desea eliminar este registro permanentemente?")) {
-                try {
-                    await deleteRecord(modKey, internalId);
-                    if (currentEditingId === internalId) cancelarEdicion();
-                    else await renderFormulario();
-                } catch (e) {
-                    alert("Error eliminando registro: " + e.message);
-                }
+        function eliminarRegistro(index) {
+            if(confirm("¿Desea eliminar este registro?")) {
+                let regs = getRegistros();
+                regs.splice(index, 1);
+                localStorage.setItem(`db_${modKey}`, JSON.stringify(regs));
+                renderFormulario();
             }
         }
 
@@ -667,118 +437,8 @@ function agregarFotoBorrador(event) {
             window.location.href = "inspeccion_menu.html";
         }
 
-        window.onload = () => {
-            renderFormulario();
-        };
-
-
-        // --- FUNCIONES DE PERSISTENCIA AUTOMÁTICA ---
-        async function guardarBorradorTemporal() {
-            if (currentEditingId !== null) return;
-
-            let borradorTextos = {};
-            currentConfig.fields.forEach(f => {
-                let el = document.getElementById(`field_${f.id}`);
-                if (el) borradorTextos[f.id] = el.value;
-            });
-
-            let fotosBase64 = [];
-            for (let p of draftPhotos) {
-                if (p.blob) {
-                    let b64 = await blobToBase64(p.blob);
-                    fotosBase64.push({ base64: b64, nombre: p.nombre });
-                }
-            }
-
-            let borrador = { fields: borradorTextos, photos: fotosBase64 };
-            try {
-                localStorage.setItem(`borrador_${schoolCode}_${modKey}`, JSON.stringify(borrador));
-            } catch(e) {
-                console.warn("No se pudo guardar el borrador en localStorage", e);
-            }
-        }
-
-        async function cargarBorradorTemporal() {
-            if (currentEditingId !== null) return;
-
-            let raw = localStorage.getItem(`borrador_${schoolCode}_${modKey}`);
-            if (!raw) return;
-
-            try {
-                let borrador = JSON.parse(raw);
-                if (borrador.fields) {
-                    Object.keys(borrador.fields).forEach(key => {
-                        let el = document.getElementById(`field_${key}`);
-                        if (el) el.value = borrador.fields[key];
-                    });
-                }
-                if (currentConfig.hasArea) calcularArea();
-
-                if (borrador.photos && Array.isArray(borrador.photos) && draftPhotos.length === 0) {
-                    borrador.photos.forEach(p => {
-                        if (p.base64) {
-                            let blob = base64ToBlob(p.base64);
-                            draftPhotos.push({
-                                blob: blob,
-                                previewUrl: URL.createObjectURL(blob),
-                                nombre: p.nombre
-                            });
-                        }
-                    });
-                    renderCarrusel();
-                }
-            } catch(e) {
-                console.error("Error al cargar borrador", e);
-            }
-        }
-
-        function limpiarBorradorTemporal() {
-            localStorage.removeItem(`borrador_${schoolCode}_${modKey}`);
-        }
-
-        function blobToBase64(blob) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
-        }
-
-        function base64ToBlob(base64) {
-            const parts = base64.split(';base64,');
-            const contentType = parts[0].split(':')[1];
-            const raw = window.atob(parts[1]);
-            const uInt8Array = new Uint8Array(raw.length);
-            for (let i = 0; i < raw.length; ++i) {
-                uInt8Array[i] = raw.charCodeAt(i);
-            }
-            return new Blob([uInt8Array], { type: contentType });
-        }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error SW:', err));
-            });
-        }
-
-        function resetearFormularioPostGuardado() {
-            // 1. Borrar de localStorage el borrador de esta escuela y módulo
-            limpiarBorradorTemporal();
-
-            // 2. Reiniciar variable de edición y botones
-            currentEditingId = null;
-            document.getElementById('btnGuardar').innerText = "➕ Agregar Registro";
-            document.getElementById('btnCancelarEdicion').style.display = "none";
-
-            // 3. Liberar memoria de las fotos y vaciar el arreglo
-            draftPhotos.forEach(p => URL.revokeObjectURL(p.previewUrl));
-            draftPhotos = [];
-
-            // 4. Volver a renderizar (al estar el localStorage limpio, limpiará los inputs y calculará el nuevo R-X automáticamente)
-            renderFormulario();
-        }
-
-        
+        // Inicializar al cargar la página
+        renderFormulario();
     </script>
 </body>
 </html>
