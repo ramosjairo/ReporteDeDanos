@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú de Inspección - Módulos</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <link rel="apple-touch-icon" href="icono-192.png">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -369,6 +372,12 @@
         });
         
         renderMenu();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error SW:', err));
+            });
+        }
     </script>
 </body>
 </html>

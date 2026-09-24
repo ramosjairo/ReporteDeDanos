@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Módulo de Inspección - Detalle</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <link rel="apple-touch-icon" href="icono-192.png">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -154,7 +157,7 @@
             <div class="photo-carousel" id="carouselContainer">
                 <div class="photo-add-card" onclick="document.getElementById('fileInput').click()">+</div>
             </div>
-                <input type="file" id="fileInput" style="display:none;" accept="image/*" multiple onchange="agregarFotoBorrador(event)">
+                <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="agregarFotoBorrador(event)">
         </div>
 
         <button class="btn-save" id="btnGuardar" onclick="guardarRegistro()">➕ Agregar Registro</button>
@@ -500,7 +503,8 @@ function agregarFotoBorrador(event) {
                 return;
             }
 
-            cancelarEdicion();
+            // Limpia el borrador, resetea las fotos y calcula el nuevo correlativo automáticamente
+            resetearFormularioPostGuardado();
         }
 
         async function renderTabla() {
@@ -750,6 +754,31 @@ function agregarFotoBorrador(event) {
             }
             return new Blob([uInt8Array], { type: contentType });
         }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error SW:', err));
+            });
+        }
+
+        function resetearFormularioPostGuardado() {
+            // 1. Borrar de localStorage el borrador de esta escuela y módulo
+            limpiarBorradorTemporal();
+
+            // 2. Reiniciar variable de edición y botones
+            currentEditingId = null;
+            document.getElementById('btnGuardar').innerText = "➕ Agregar Registro";
+            document.getElementById('btnCancelarEdicion').style.display = "none";
+
+            // 3. Liberar memoria de las fotos y vaciar el arreglo
+            draftPhotos.forEach(p => URL.revokeObjectURL(p.previewUrl));
+            draftPhotos = [];
+
+            // 4. Volver a renderizar (al estar el localStorage limpio, limpiará los inputs y calculará el nuevo R-X automáticamente)
+            renderFormulario();
+        }
+
+        
     </script>
 </body>
 </html>

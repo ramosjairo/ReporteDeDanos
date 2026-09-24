@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inspeccion-app-v1';
+const CACHE_NAME = 'inspeccion-app-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -6,8 +6,9 @@ const ASSETS_TO_CACHE = [
   './inspeccion_menu.html',
   './jszip.min.js',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icono-192.png',
+  './icono-512.png',
+  './novedades.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -16,7 +17,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
+  // No llamamos a skipWaiting automáticamente para permitir notificar al usuario
 });
 
 self.addEventListener('activate', (event) => {
@@ -45,4 +46,10 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
