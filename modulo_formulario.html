@@ -154,6 +154,12 @@
             <span class="school-badge" id="lblSchool">Escuela: ...</span>
         </div>
 
+        <!-- GESTOR DE INSPECCIONES -->
+        <div style="margin-bottom: 12px; background: #f8fff9; border: 1px solid #28a745; padding: 8px; border-radius: 6px;">
+            <label style="font-size: 11px; margin-top: 0; color: #28a745;">Expediente / Inspección Activa:</label>
+            <select id="selectInspeccionActiva" onchange="cambiarInspeccion()" style="width:100%; padding: 4px; font-size: 12px; margin-top: 4px; border-color: #28a745;"></select>
+        </div>
+
         <div class="record-id-title" id="lblRecordId">R-1</div>
 
         <div class="form-card" id="camposDinamicosContainer">
@@ -236,7 +242,7 @@
 
         // IndexedDB Core
         const DB_NAME = 'InspeccionAppDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 2; // Incremented for tbInspecciones
         const STORES = Object.keys(moduleConfigs);
         let dbInstance = null;
 
@@ -250,6 +256,9 @@
                             db.createObjectStore(storeName, { keyPath: 'internal_id', autoIncrement: true });
                         }
                     });
+                    if (!db.objectStoreNames.contains('tbInspecciones')) {
+                        db.createObjectStore('tbInspecciones', { keyPath: 'id_inspeccion' });
+                    }
                 };
                 request.onsuccess = () => {
                     dbInstance = request.result;
@@ -264,7 +273,15 @@
                 const tx = dbInstance.transaction(storeName, 'readonly');
                 const store = tx.objectStore(storeName);
                 const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
+                request.onsuccess = () => {
+                    let records = request.result;
+                    let activeId = localStorage.getItem('active_id_inspeccion') || 'default_legacy';
+                    let filtered = records.filter(r => {
+                        let recId = r.id_inspeccion || 'default_legacy';
+                        return recId === activeId;
+                    });
+                    resolve(filtered);
+                };
                 request.onerror = () => reject(request.error);
             });
         }
@@ -482,7 +499,9 @@ function agregarFotoBorrador(event) {
                 idString = `R-${seq}`;
             }
 
-            let nuevoRegistro = {};
+            let nuevoRegistro = {
+                id_inspeccion: localStorage.getItem('active_id_inspeccion') || 'default_legacy'
+            };
             if (currentEditingId !== null) {
                 nuevoRegistro.internal_id = currentEditingId;
             }
@@ -701,7 +720,42 @@ function agregarFotoBorrador(event) {
             window.location.href = "inspeccion_menu.html";
         }
 
-        window.onload = () => {
+        async function cargarInspeccionesMenu() {
+            if (!dbInstance) await initDB();
+            return new Promise((resolve, reject) => {
+                if (!dbInstance.objectStoreNames.contains('tbInspecciones')) return resolve([]);
+                const tx = dbInstance.transaction('tbInspecciones', 'readonly');
+                const req = tx.objectStore('tbInspecciones').getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        
+        async function renderSelectInspeccion() {
+            let inspecciones = await cargarInspeccionesMenu();
+            const select = document.getElementById('selectInspeccionActiva');
+            if (!select) return;
+            select.innerHTML = '';
+            inspecciones.forEach(i => {
+                let opt = document.createElement('option');
+                opt.value = i.id_inspeccion;
+                opt.textContent = i.nombre_inspeccion;
+                select.appendChild(opt);
+            });
+            let activeId = localStorage.getItem('active_id_inspeccion') || 'default_legacy';
+            select.value = activeId;
+        }
+
+        async function cambiarInspeccion() {
+            const select = document.getElementById('selectInspeccionActiva');
+            if(select) {
+                localStorage.setItem('active_id_inspeccion', select.value);
+                cancelarEdicion(); // Restablece el formulario y recarga registros
+            }
+        }
+
+        window.onload = async () => {
+            await renderSelectInspeccion();
             renderFormulario();
         };
 
@@ -726,7 +780,8 @@ function agregarFotoBorrador(event) {
 
             let borrador = { fields: borradorTextos, photos: fotosBase64 };
             try {
-                localStorage.setItem(`borrador_${schoolCode}_${modKey}`, JSON.stringify(borrador));
+                let activeId = localStorage.getItem('active_id_inspeccion') || 'default_legacy';
+                localStorage.setItem(`borrador_${schoolCode}_${activeId}_${modKey}`, JSON.stringify(borrador));
             } catch(e) {
                 console.warn("No se pudo guardar el borrador en localStorage", e);
             }
@@ -735,7 +790,8 @@ function agregarFotoBorrador(event) {
         async function cargarBorradorTemporal() {
             if (currentEditingId !== null) return;
 
-            let raw = localStorage.getItem(`borrador_${schoolCode}_${modKey}`);
+            let activeId = localStorage.getItem('active_id_inspeccion') || 'default_legacy';
+            let raw = localStorage.getItem(`borrador_${schoolCode}_${activeId}_${modKey}`);
             if (!raw) return;
 
             try {
@@ -767,7 +823,8 @@ function agregarFotoBorrador(event) {
         }
 
         function limpiarBorradorTemporal() {
-            localStorage.removeItem(`borrador_${schoolCode}_${modKey}`);
+            let activeId = localStorage.getItem('active_id_inspeccion') || 'default_legacy';
+            localStorage.removeItem(`borrador_${schoolCode}_${activeId}_${modKey}`);
         }
 
         function blobToBase64(blob) {

@@ -114,6 +114,13 @@
             <span>🏫</span> Datos de la Institución
         </div>
 
+        <!-- NEW SECTION: GESTOR DE INSPECCIONES -->
+        <div class="section-card" style="border-color: #28a745; background: #f8fff9;">
+            <label>Expediente / Inspección Activa:</label>
+            <select id="selectInspeccionActiva" onchange="cambiarInspeccion()"></select>
+            <button class="btn-primary" style="margin-top: 10px; width: 100%;" onclick="nuevaInspeccion()">➕ Nueva Inspección</button>
+        </div>
+
         <div class="section-card">
             <label>Código de Escuela:</label>
             <input type="text" id="schoolCode" value="125" placeholder="Ej. 125">
@@ -141,7 +148,134 @@
     </div>
 
     <script>
-        // Cargar datos previos si existen
+        // IndexedDB para Gestor de Inspecciones
+        const DB_NAME = 'InspeccionAppDB';
+        const DB_VERSION = 2; // Incrementar versión para soportar tbInspecciones
+        let dbInstance = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('tbInspecciones')) {
+                        db.createObjectStore('tbInspecciones', { keyPath: 'id_inspeccion' });
+                    }
+                };
+                request.onsuccess = () => {
+                    dbInstance = request.result;
+                    resolve(dbInstance);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function cargarInspecciones() {
+            if (!dbInstance) await initDB();
+            return new Promise((resolve, reject) => {
+                if (!dbInstance.objectStoreNames.contains('tbInspecciones')) {
+                    resolve([]);
+                    return;
+                }
+                const tx = dbInstance.transaction('tbInspecciones', 'readonly');
+                const store = tx.objectStore('tbInspecciones');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function initGestorInspecciones() {
+            let inspecciones = await cargarInspecciones();
+            
+            if (inspecciones.length === 0) {
+                // Crear la inspección por defecto para legacy records
+                const defaultInsp = {
+                    id_inspeccion: 'default_legacy',
+                    school_code: localStorage.getItem('school_code') || '125',
+                    fecha: new Date().toISOString().split('T')[0],
+                    nombre_inspeccion: 'Inspección Inicial (Legado)',
+                    estado: 'activa'
+                };
+                
+                await new Promise((resolve, reject) => {
+                    if (!dbInstance.objectStoreNames.contains('tbInspecciones')) return resolve();
+                    const tx = dbInstance.transaction('tbInspecciones', 'readwrite');
+                    const req = tx.objectStore('tbInspecciones').add(defaultInsp);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject();
+                });
+                inspecciones.push(defaultInsp);
+            }
+
+            const select = document.getElementById('selectInspeccionActiva');
+            select.innerHTML = '';
+            
+            inspecciones.forEach(insp => {
+                const opt = document.createElement('option');
+                opt.value = insp.id_inspeccion;
+                opt.textContent = insp.nombre_inspeccion;
+                select.appendChild(opt);
+            });
+
+            let activeId = localStorage.getItem('active_id_inspeccion');
+            if (!activeId || !inspecciones.find(i => i.id_inspeccion === activeId)) {
+                activeId = inspecciones[0].id_inspeccion;
+                localStorage.setItem('active_id_inspeccion', activeId);
+            }
+            select.value = activeId;
+            
+            await cambiarInspeccion(false);
+        }
+
+        async function cambiarInspeccion(updateDate = true) {
+            const select = document.getElementById('selectInspeccionActiva');
+            const activeId = select.value;
+            localStorage.setItem('active_id_inspeccion', activeId);
+            
+            let inspecciones = await cargarInspecciones();
+            let curr = inspecciones.find(i => i.id_inspeccion === activeId);
+            if (curr && updateDate) {
+                document.getElementById('schoolCode').value = curr.school_code || '';
+                document.getElementById('inspectionDate').value = curr.fecha || '';
+            }
+        }
+
+        async function nuevaInspeccion() {
+            if (!confirm('¿Desea crear una nueva inspección? Esto generará un nuevo expediente y limpiará los borradores.')) return;
+            
+            const timestamp = new Date().getTime();
+            const id_inspeccion = 'insp_' + timestamp;
+            const fecha = document.getElementById('inspectionDate').value || new Date().toISOString().split('T')[0];
+            const schoolCode = document.getElementById('schoolCode').value || '125';
+            
+            const nuevaInsp = {
+                id_inspeccion: id_inspeccion,
+                school_code: schoolCode,
+                fecha: fecha,
+                nombre_inspeccion: `Inspección - Escuela ${schoolCode} - ${fecha}`,
+                estado: 'activa'
+            };
+
+            await new Promise(async (resolve, reject) => {
+                if (!dbInstance) await initDB();
+                const tx = dbInstance.transaction('tbInspecciones', 'readwrite');
+                const req = tx.objectStore('tbInspecciones').add(nuevaInsp);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject();
+            });
+
+            localStorage.setItem('active_id_inspeccion', id_inspeccion);
+            
+            await initGestorInspecciones();
+            alert('Nueva inspección creada y seleccionada.');
+        }
+
+        window.addEventListener('load', () => {
+            initGestorInspecciones();
+        });
+
+        // Cargar datos previos si existen (legacy local storage fallback)
         if(localStorage.getItem('school_code')) {
             document.getElementById('schoolCode').value = localStorage.getItem('school_code');
         }
