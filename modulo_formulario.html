@@ -224,14 +224,92 @@
         document.getElementById('lblSchool').innerText = `Escuela: ${schoolCode}`;
 
         const moduleConfigs = {
-            'P2': { title: '1. Reparaciones Lineales (P2)', keyValField: 'length_P2', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'length_P2', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_P2', label: 'Notas', type: 'text'}] },
-            'W1': { title: '2. Reparación de Paredes (W1)', keyValField: 'length_w', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'length_w', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'height_w', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'thickness_w', label: 'Espesor [cm]', type: 'number'}, {id: 'wall_Type', label: 'Material', type: 'select', options: [{val: 'ConcreteBlocks', text: 'Bloque de concreto'}, {val: 'HollowClay', text: 'Bloque hueco de arcilla'}, {val: 'FullClay', text: 'Ladrillo macizo de arcilla'}, {val: 'LightFrame', text: 'Perfil metálico y lámina de yeso'}]}, {id: 'finishing', label: 'Acabado', type: 'select', options: [{val: 'Plaster both wall sides', text: 'Frisada en ambas caras'}, {val: 'Tiles both wall sides', text: 'Cerámico en ambas caras'}, {val: 'One side plaster and one side tiles', text: 'Una cara frisada y otra cerámica'}]}, {id: 'notes_w', label: 'Notas', type: 'text'}] },
-            'P1': { title: '3. Frisos de Paños Mayores (P1)', keyValField: 'area_PC_P1', keyValLabel: 'Área (m²)', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'width_P1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, {id: 'length_P1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, {id: 'notes_P1', label: 'Notas', type: 'text'}], hasArea: true },
-            'S1': { title: '4. Reparación de Columnas (S1)', keyValField: 'height_S1', keyValLabel: 'Altura', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S1', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S1', label: 'Lado 2 [cm]', type: 'number'}, {id: 'height_S1', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'notes_S1', label: 'Notas', type: 'text'}] },
-            'S4': { title: '5. Sustitución de Columnas (S4)', keyValField: 'height_S4', keyValLabel: 'Altura', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S4', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S4', label: 'Lado 2 [cm]', type: 'number'}, {id: 'height_S4', label: 'Altura [m]', type: 'number', step: '0.01'}, {id: 'notes_column', label: 'Notas', type: 'text'}] },
-            'S5': { title: '6. Reparación de Vigas (S5)', keyValField: 'length_S5', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S5', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S5', label: 'Lado 2 [cm]', type: 'number'}, {id: 'length_S5', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_S5', label: 'Notas', type: 'text'}] },
-            'S3': { title: '7. Sustitución de Vigas (S3)', keyValField: 'length_S3', keyValLabel: 'Longitud', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'side1_S3', label: 'Lado 1 [cm]', type: 'number'}, {id: 'side2_S3', label: 'Lado 2 [cm]', type: 'number'}, {id: 'length_S3', label: 'Longitud [m]', type: 'number', step: '0.01'}, {id: 'notes_S3', label: 'Notas', type: 'text'}] },
-            'F1': { title: '8. Daños en Pisos (F1)', keyValField: 'floor_area', keyValLabel: 'Área (m²)', fields: [{id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, {id: 'width_F1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, {id: 'length_F1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, {id: 'notes_floor', label: 'Notas', type: 'text'}], hasArea: true }
+            'P2': { 
+                title: '1. Reparaciones Lineales (P2)', 
+                keyValField: 'length_P2', 
+                keyValLabel: 'Longitud', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'length_P2', label: 'Longitud [m]', type: 'number', step: '0.01'},
+                    {id: 'notes_P2', label: 'Notas', type: 'text'}] },
+            'W1': { 
+                title: '2. Reparación de Paredes (W1)', 
+                keyValField: 'area_PC_W1', 
+                keyValLabel: 'Área (m²)', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'length_W1', label: 'Longitud [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'height_W1', label: 'Altura [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'thickness_W1', label: 'Espesor [cm]', type: 'number'}, 
+                    {id: 'wall_Type', label: 'Material', type: 'select', options: [{val: 'ConcreteBlocks', text: 'Bloque de concreto'}, {val: 'HollowClay', text: 'Bloque hueco de arcilla'}, {val: 'FullClay', text: 'Ladrillo macizo de arcilla'}, {val: 'LightFrame', text: 'Perfil metálico y lámina de yeso'}]}, 
+                    {id: 'finishing_W1', label: 'Acabado', type: 'select', options: [{val: 'Plaster both wall sides', text: 'Frisada en ambas caras'}, {val: 'Tiles both wall sides', text: 'Cerámico en ambas caras'}, {val: 'One side plaster and one side tiles', text: 'Una cara frisada y otra cerámica'}]}, 
+                    {id: 'notes_W1', label: 'Notas', type: 'text'}], 
+                    hasArea: true 
+            },
+            'P1': { 
+                title: '3. Frisos de Paños Mayores (P1)', 
+                keyValField: 'area_PC_P1', 
+                keyValLabel: 'Área (m²)', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'width_P1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'length_P1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'notes_P1', label: 'Notas', type: 'text'}], hasArea: true 
+            },
+            'S1': { 
+                title: '4. Reparación de Columnas (S1)', 
+                keyValField: 'height_S1', keyValLabel: 'Altura', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'side1_S1', label: 'Lado 1 [cm]', type: 'number'}, 
+                    {id: 'side2_S1', label: 'Lado 2 [cm]', type: 'number'}, 
+                    {id: 'height_S1', label: 'Altura [m]', type: 'number', step: '0.01'}, 
+                    {id: 'notes_S1', label: 'Notas', type: 'text'}] 
+            },
+            'S4': { 
+                title: '5. Sustitución de Columnas (S4)', 
+                keyValField: 'height_S4', 
+                keyValLabel: 'Altura', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'side1_S4', label: 'Lado 1 [cm]', type: 'number'}, 
+                    {id: 'side2_S4', label: 'Lado 2 [cm]', type: 'number'}, 
+                    {id: 'height_S4', label: 'Altura [m]', type: 'number', step: '0.01'}, 
+                    {id: 'notes_column', label: 'Notas', type: 'text'}] 
+            },
+            'S5': { 
+                title: '6. Reparación de Vigas (S5)', 
+                keyValField: 'length_S5', 
+                keyValLabel: 'Longitud', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'side1_S5', label: 'Lado 1 [cm]', type: 'number'}, 
+                    {id: 'side2_S5', label: 'Lado 2 [cm]', type: 'number'}, 
+                    {id: 'length_S5', label: 'Longitud [m]', type: 'number', step: '0.01'}, 
+                    {id: 'notes_S5', label: 'Notas', type: 'text'}] 
+            },
+            'S3': { 
+                title: '7. Sustitución de Vigas (S3)', 
+                keyValField: 'length_S3', 
+                keyValLabel: 'Longitud', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'side1_S3', label: 'Lado 1 [cm]', type: 'number'}, 
+                    {id: 'side2_S3', label: 'Lado 2 [cm]', type: 'number'}, 
+                    {id: 'length_S3', label: 'Longitud [m]', type: 'number', step: '0.01'}, 
+                    {id: 'notes_S3', label: 'Notas', type: 'text'}] 
+            },
+            'F1': { 
+                title: '8. Daños en Pisos (F1)', 
+                keyValField: 'floor_area', 
+                keyValLabel: 'Área (m²)', 
+                fields: [
+                    {id: 'ubicacion', label: 'Ubicación (Local/Salón)', type: 'text'}, 
+                    {id: 'width_F1', label: 'Ancho [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'length_F1', label: 'Largo [m]', type: 'number', step: '0.01', calc: true}, 
+                    {id: 'notes_floor', label: 'Notas', type: 'text'}], 
+                    hasArea: true 
+            }
         };
 
         const currentConfig = moduleConfigs[modKey] || moduleConfigs['P2'];
@@ -317,7 +395,7 @@
         }
 
         function getImgKey(key) {
-            return {'P2':'P2_Image', 'W1':'wall_image', 'P1':'P1_Image', 'S1':'S1_Image', 'S4':'column_Image', 'S5':'S5_Image', 'S3':'S3_Image', 'F1':'floor_Image'}[key];
+            return {'P2':'P2_Image', 'W1':'W1_Image', 'P1':'P1_Image', 'S1':'S1_Image', 'S4':'column_Image', 'S5':'S5_Image', 'S3':'S3_Image', 'F1':'floor_Image'}[key];
         }
 
         function getNextSequence(regs) {
@@ -382,6 +460,10 @@
             } else if (modKey === 'F1') {
                 let w = parseFloat(document.getElementById('field_width_F1').value) || 0;
                 let l = parseFloat(document.getElementById('field_length_F1').value) || 0;
+                document.getElementById('field_area_display').value = (w * l).toFixed(2);
+            } else if (modKey === 'W1') {
+                let w = parseFloat(document.getElementById('field_height_W1').value) || 0;
+                let l = parseFloat(document.getElementById('field_length_W1').value) || 0;
                 document.getElementById('field_area_display').value = (w * l).toFixed(2);
             }
         }
@@ -527,6 +609,7 @@ function agregarFotoBorrador(event) {
 
             if (modKey === 'P1') nuevoRegistro.area_PC_P1 = parseFloat(document.getElementById('field_area_display').value) || 0;
             if (modKey === 'F1') nuevoRegistro.floor_area = parseFloat(document.getElementById('field_area_display').value) || 0;
+            if (modKey === 'W1') nuevoRegistro.area_PC_W1 = parseFloat(document.getElementById('field_area_display').value) || 0;
 
             let imgKey = getImgKey(modKey);
             let fotosGuardadas = [];

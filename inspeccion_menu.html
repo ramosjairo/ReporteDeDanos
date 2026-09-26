@@ -169,13 +169,14 @@
 
         const modulesData = [
             { key: 'P2', title: 'Reparaciones Lineales (P2)', icon: '📏', unit: 'm', sumField: 'length_P2' },
-            { key: 'W1', title: 'Reparación de Paredes (W1)', icon: '🧱', unit: 'm', sumField: 'length_w' },
             { key: 'P1', title: 'Frisos Paños Mayores (P1)', icon: '🎨', unit: 'm²', sumField: 'area_PC_P1' },
+            { key: 'W1', title: 'Restitución de Paredes (W1)', icon: '🧱', unit: 'm²', sumField: 'area_PC_W1' },
+            { key: 'F1', title: 'Daños en Pisos (F1)', icon: '🏗️', unit: 'm²', sumField: 'floor_area' },
             { key: 'S1', title: 'Reparación Columnas (S1)', icon: '🏛️', unit: 'm', sumField: 'height_S1' },
-            { key: 'S4', title: 'Sustitución Columnas (S4)', icon: '🏗️', unit: 'm', sumField: 'height_S4' },
+            { key: 'S4', title: 'Sustitución Columnas (S4)', icon: '↕️', unit: 'm', sumField: 'height_S4' },
             { key: 'S5', title: 'Reparación de Vigas (S5)', icon: '🪵', unit: 'm', sumField: 'length_S5' },
-            { key: 'S3', title: 'Sustitución de Vigas (S3)', icon: '🏗️', unit: 'm', sumField: 'length_S3' },
-            { key: 'F1', title: 'Daños en Pisos (F1)', icon: '🏗️', unit: 'm²', sumField: 'floor_area' }
+            { key: 'S3', title: 'Sustitución de Vigas (S3)', icon: '↔️', unit: 'm', sumField: 'length_S3' }
+            
         ];
 
         // IndexedDB Core
@@ -282,14 +283,39 @@
 
             // Mapeo entre claves internas y campos del esquema JSON UNESCO
             const moduleMap = {
-                'W1': { flag: 'w1_Partition_Wall', arrayKey: 'w1_wall_replacement', imgKey: 'wall_image' },
-                'P1': { flag: 'p1_Plaster_Repair', arrayKey: 'p1_Plaster_Repair_Large', imgKey: 'P1_Image' },
-                'P2': { flag: 'p2_Plaster_repair', arrayKey: 'p2_Plaster_Repair_Linear', imgKey: 'P2_Image' },
-                'S1': { flag: 'column_Cover_S1', arrayKey: 's1_column_Repair', imgKey: 'S1_Image' },
-                'S4': { flag: 'column_Replacement_S4', arrayKey: 'S4_column_Replacement', imgKey: 'column_Image' },
-                'S5': { flag: 'column_Cover_S5', arrayKey: 'S5_beam_Repair', imgKey: 'S5_Image' },
-                'S3': { flag: 'beam_Replacement_S3', arrayKey: 'S3_beam_Replacement', imgKey: 'S3_Image' },
-                'F1': { flag: 'floor_damage_F1', arrayKey: 'F1_floor_Damage', imgKey: 'floor_Image' }
+                'W1': { 
+                    flag: 'w1_Partition_Wall', 
+                    arrayKey: 'w1_wall_replacement', 
+                    imgKey: 'W1_Image' 
+                },
+                'P1': { 
+                    flag: 'p1_Plaster_Repair', 
+                    arrayKey: 'p1_Plaster_Repair_Large', 
+                    imgKey: 'P1_Image' },
+                'P2': { 
+                    flag: 'p2_Plaster_repair', 
+                    arrayKey: 'p2_Plaster_Repair_Linear', 
+                    imgKey: 'P2_Image' },
+                'S1': { 
+                    flag: 'column_Cover_S1', 
+                    arrayKey: 's1_column_Repair', 
+                    imgKey: 'S1_Image' },
+                'S4': { 
+                    flag: 'column_Replacement_S4', 
+                    arrayKey: 'S4_column_Replacement', 
+                    imgKey: 'column_Image' },
+                'S5': { 
+                    flag: 'column_Cover_S5', 
+                    arrayKey: 'S5_beam_Repair', 
+                    imgKey: 'S5_Image' },
+                'S3': { 
+                    flag: 'beam_Replacement_S3', 
+                    arrayKey: 'S3_beam_Replacement', 
+                    imgKey: 'S3_Image' },
+                'F1': { 
+                    flag: 'floor_damage_F1', 
+                    arrayKey: 'F1_floor_Damage', 
+                    imgKey: 'floor_Image' }
             };
 
             let assessmentData = {
