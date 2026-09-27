@@ -136,7 +136,6 @@
     <script src="jszip.min.js"></script>
 </head>
 <body>
-
     <div class="main-container">
         <div class="header-title">
             <span>📋 Paneles de Inspección</span>
@@ -159,10 +158,11 @@
         <button class="btn-home" onclick="volverInicio()">🏠 Volver a Inicio</button>
 
         <div class="footer-info">
-            by Jairo Ramos | v1.0
+            by Jairo Ramos | <span id="versionText">Cargando...</span>
         </div>
     </div>
 
+    <script src="global.js"></script>
     <script>
         const schoolCode = localStorage.getItem('school_code') || '125';
         document.getElementById('lblSchool').innerText = `Escuela: ${schoolCode}`;

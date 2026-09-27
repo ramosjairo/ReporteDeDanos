@@ -1,55 +1,59 @@
-const CACHE_NAME = 'inspeccion-app-v1.1.3';
+const CACHE_NAME = 'inspeccion-app-v1.1.4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './modulo_formulario.html',
   './inspeccion_menu.html',
   './jszip.min.js',
+  './global.js',
   './manifest.json',
   './icono-192.png',
   './icono-512.png',
   './novedades.json'
 ];
 
+// 1. Instalar el Service Worker y almacenar los archivos esenciales en la caché local
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('Guardando archivos en caché local para uso offline...');
       return cache.addAll(ASSETS_TO_CACHE);
-    })
+    }).then(() => self.skipWaiting())
   );
-  // No llamamos a skipWaiting automáticamente para permitir notificar al usuario
 });
 
+// 2. Activar el Service Worker y limpiar cachés antiguas si las hubiera
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('Eliminando caché antigua:', key);
             return caches.delete(key);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
+// 3. Interceptar las peticiones: Estrategia Cache First (Priorizar Caché sobre Internet)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
-        return cachedResponse;
+        return cachedResponse; // Devuelve el archivo local inmediatamente
       }
+      
+      // Si no está en caché, intenta buscarlo en la red
       return fetch(event.request).catch(() => {
-        // Retorno sin conexión seguro
+        // Fallback estricto fuera de línea: si es una petición de navegación/HTML, sirve index.html
+        if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('./index.html');
+        }
+        console.log('El recurso solicitado no está disponible offline:', event.request.url);
       });
     })
   );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'skipWaiting') {
-    self.skipWaiting();
-  }
 });

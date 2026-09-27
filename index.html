@@ -108,7 +108,6 @@
     </style>
 </head>
 <body>
-
     <div class="main-container">
         <div class="header-title">
             <span>🏫</span> Datos de la Institución
@@ -142,10 +141,14 @@
             <button class="btn-secondary" onclick="resetearDia()">🔄 Nuevo Día</button>
         </div>
 
+
         <div class="footer-info">
-            by Jairo Ramos | v1.0
-        </div>
+            by Jairo Ramos | <span id="versionText">Cargando...</span>
+        </div>       
+
     </div>
+
+    <script src="global.js"></script>
 
     <script>
         // IndexedDB para Gestor de Inspecciones
@@ -342,11 +345,20 @@
             fetch('./novedades.json?t=' + new Date().getTime())
                 .then(res => res.json())
                 .then(data => {
-                    if(confirm("Actualización disponible: " + data.mensaje + "\n¿Desea actualizar ahora?")) {
+                    // Construimos el mensaje ordenado con la información dinámica del JSON
+                    let mensaje = `${data.titulo} (Versión ${data.version})\nFecha: ${data.fecha}\n\nNovedades:\n`;
+                    data.cambios.forEach((cambio) => {
+                        mensaje += `• ${cambio}\n`;
+                    });
+                    mensaje += "\n¿Desea actualizar el sistema ahora?";
+
+                    if(confirm(mensaje)) {
                         if(newWorker) newWorker.postMessage({ action: 'skipWaiting' });
                     }
-                }).catch(() => {
-                    if(confirm("Nueva actualización disponible. ¿Desea actualizar ahora?")) {
+                }).catch((error) => {
+                    console.error("No se pudo leer novedades.json:", error);
+                    // Respaldo dinámico usando la versión que ya conoce el Service Worker
+                    if(confirm("🚀 ¡Nueva actualización disponible (v1.1.4)!\n\n¿Desea actualizar el sistema ahora?")) {
                         if(newWorker) newWorker.postMessage({ action: 'skipWaiting' });
                     }
                 });
