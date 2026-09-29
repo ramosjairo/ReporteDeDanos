@@ -154,12 +154,6 @@
             <span class="school-badge" id="lblSchool">Escuela: ...</span>
         </div>
 
-        <!-- GESTOR DE INSPECCIONES -->
-        <div style="margin-bottom: 12px; background: #f8fff9; border: 1px solid #28a745; padding: 8px; border-radius: 6px;">
-            <label style="font-size: 11px; margin-top: 0; color: #28a745;">Expediente / Inspección Activa:</label>
-            <select id="selectInspeccionActiva" onchange="cambiarInspeccion()" style="width:100%; padding: 4px; font-size: 12px; margin-top: 4px; border-color: #28a745;"></select>
-        </div>
-
         <div class="record-id-title" id="lblRecordId">R-1</div>
 
         <div class="form-card" id="camposDinamicosContainer">
@@ -839,7 +833,7 @@ function agregarFotoBorrador(event) {
         }
 
         window.onload = async () => {
-            await renderSelectInspeccion();
+            //await renderSelectInspeccion();
             renderFormulario();
         };
 

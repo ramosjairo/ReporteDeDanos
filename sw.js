@@ -1,12 +1,14 @@
-const CACHE_NAME = 'inspeccion-app-v1.1.4';
+const CACHE_NAME = 'inspeccion-app-v1.1.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './modulo_formulario.html',
   './inspeccion_menu.html',
+  './inspeccion_config.html',
   './jszip.min.js',
   './global.js',
   './manifest.json',
+  './logo.png',
   './icono-192.png',
   './icono-512.png',
   './novedades.json'

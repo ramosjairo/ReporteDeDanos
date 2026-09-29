@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parámetros Globales</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .card-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border: 2px solid #2c5282;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header-app {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .header-app h2 {
+            font-size: 1.25rem;
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-input {
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #2d3748;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #2b6cb0;
+        }
+
+        .inspector-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .inspector-input-row input {
+            flex: 1;
+        }
+
+        .btn-add {
+            background-color: #2b6cb0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 42px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+            background-color: #2c5282;
+        }
+
+        .inspector-list {
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            max-height: 140px;
+            overflow-y: auto;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .inspector-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .inspector-item:last-child {
+            border-bottom: none;
+        }
+
+        .inspector-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-delete:hover {
+            background-color: #fff5f5;
+        }
+
+        .footer-actions {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-gray {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .btn-gray:hover { background-color: #cbd5e0; }
+
+        .btn-green {
+            background-color: #276749;
+            color: #ffffff;
+        }
+        .btn-green:hover { background-color: #22543d; }
+
+        .footer-text {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-container">
+        <div class="header-app">
+            <span>⚙️️</span>
+            <h2>Parámetros Globales</h2>
+        </div>
+
+        <div class="form-group">
+            <label>Nombre de la institución</label>
+            <input type="text" id="txtSchoolName" class="form-input" placeholder="Ej. U.E. Nacional Ejemplo">
+        </div>
+
+        <div class="form-group">
+            <label>Dirección:</label>
+            <input type="text" id="txtSchoolAddress" class="form-input" placeholder="Ej. Grupo Central">
+        </div>
+
+        <div class="form-group">
+            <label>Nómina de Inspectores</label>
+            <div class="inspector-input-row">
+                <input type="text" class="form-input" id="txtInspector" placeholder="Nombre de Inspector">
+                <button class="btn-add" onclick="agregarInspector()">+</button>
+            </div>
+        </div>
+
+        <div class="inspector-list" id="listaInspectores">
+            <!-- Cargado dinámicamente -->
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn btn-gray" onclick="history.back()">
+                Volver
+            </button>
+            <button class="btn btn-green" onclick="guardarEquipo()">
+                Guardar Equipo
+            </button>
+        </div>
+
+        <div class="footer-text">
+            by Jairo Ramos | v5.6
+        </div>
+    </div>
+
+    <script>
+        const DB_NAME = 'InspeccionAppDB';
+        const DB_VERSION = 2;
+        let dbInstance = null;
+        let inspectoresArray = [];
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onsuccess = () => {
+                    dbInstance = request.result;
+                    resolve(dbInstance);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function cargarDatosInspeccion() {
+            if (!dbInstance) await initDB();
+            const activeId = localStorage.getItem('active_id_inspeccion');
+            if (!activeId) return;
+
+            const tx = dbInstance.transaction('tbInspecciones', 'readonly');
+            const store = tx.objectStore('tbInspecciones');
+            const req = store.get(activeId);
+
+            req.onsuccess = (e) => {
+                const insp = e.target.result;
+                if (insp) {
+                    document.getElementById('txtSchoolName').value = insp.school_name || '';
+                    document.getElementById('txtSchoolAddress').value = insp.direccion || '';
+                    inspectoresArray = insp.inspectors || [];
+                    renderInspectores();
+                }
+            };
+        }
+
+        function renderInspectores() {
+            const lista = document.getElementById('listaInspectores');
+            lista.innerHTML = '';
+            inspectoresArray.forEach((nombre, index) => {
+                const item = document.createElement('div');
+                item.className = 'inspector-item';
+                item.innerHTML = `
+                    <span class="inspector-info">👤 ${nombre}</span>
+                    <button class="btn-delete" onclick="eliminarInspector(${index})">✕</button>
+                `;
+                lista.appendChild(item);
+            });
+        }
+
+        function agregarInspector() {
+            const input = document.getElementById('txtInspector');
+            const val = input.value.trim();
+            if (val === '') return;
+
+            inspectoresArray.push(val);
+            input.value = '';
+            renderInspectores();
+        }
+
+        function eliminarInspector(index) {
+            inspectoresArray.splice(index, 1);
+            renderInspectores();
+        }
+
+        async function guardarEquipo() {
+            if (!dbInstance) await initDB();
+            const activeId = localStorage.getItem('active_id_inspeccion');
+            if (!activeId) {
+                alert("No hay una inspección activa seleccionada.");
+                return;
+            }
+
+            const schoolName = document.getElementById('txtSchoolName').value.trim();
+            const direccion = document.getElementById('txtSchoolAddress').value.trim();
+
+            if (!schoolName) {
+                alert("Debe indicar el nombre de la institución.");
+                return;
+            }
+
+            if (inspectoresArray.length === 0) {
+                alert("Debe agregar al menos un inspector en la nómina.");
+                return;
+            }
+
+            const tx = dbInstance.transaction('tbInspecciones', 'readwrite');
+            const store = tx.objectStore('tbInspecciones');
+            const reqGet = store.get(activeId);
+
+            reqGet.onsuccess = (e) => {
+                let insp = e.target.result;
+                if (insp) {
+                    insp.school_name = schoolName;
+                    insp.direccion = direccion;
+                    insp.inspectors = inspectoresArray;
+                    insp.estado_config = 'configurado';
+                    
+                    // Actualizamos también el nombre de la inspección descriptivo si aplica
+                    insp.nombre_inspeccion = `Insp. [${insp.school_code || '001'}] ${schoolName}`;
+
+                    const reqUpdate = store.put(insp);
+                    reqUpdate.onsuccess = () => {
+                        alert("Parámetros y equipo guardados con éxito.");
+                        window.location.href = "inspeccion_menu.html";
+                    };
+                    reqUpdate.onerror = () => {
+                        alert("Error al guardar en la base de datos local.");
+                    };
+                }
+            };
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            await cargarDatosInspeccion();
+        });
+    </script>
+</body>
+</html>
