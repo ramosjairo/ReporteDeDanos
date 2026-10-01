@@ -1,9 +1,10 @@
 {
-  "version": "1.1.7",
-  "fecha": "2026-06-06",
-  "titulo": "🚀 ¡Actualización 1.1.4 Disponible!",
+  "version": "1.1.8",
+  "fecha": "2026-10-01",
+  "titulo": "🚀 ¡Actualización 1.1.8 Disponible!",
   "cambios": [
     "Fix en la mejora de toma de datos para mayor estabilidad offline.",
+    "Fix de incompatibilidad con la base de datos (Version 4).",
     "Optimización de la caché local del Service Worker.",
     "Mejora en la robustez de la navegación sin conexión."
   ]

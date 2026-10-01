@@ -242,31 +242,69 @@
             { key: 'S3', title: 'Sustitución de Vigas (S3)', icon: '↔️', unit: 'm', sumField: 'length_S3' }
         ];
 
-        // IndexedDB Core
-        const DB_NAME = 'InspeccionAppDB';
-        const DB_VERSION = 2;
         const STORES = modulesData.map(m => m.key);
+
+        // ==========================================
+        // CONFIGURACIÓN CENTRALIZADA DE INDEXEDDB
+        // ==========================================
+        const DB_NAME = 'InspeccionAppDB';
+        const DB_VERSION = 4; // Subimos a 4 en TODOS los archivos para forzar reparación
         let dbInstance = null;
+
+        // Lista maestra de todos los almacenes de módulos (Object Stores)
+        // Esto asegura que sin importar por qué archivo entre el usuario,
+        // se creen todas las tablas requeridas.
+        const APP_MODULE_STORES = ['P1','P2', 'W1', 'F1', 'S1', 'S2','S3', 'S4', 'S5'];
 
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                // 1. EVENTO DE MIGRACIÓN/CREACIÓN
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    STORES.forEach(storeName => {
+                    console.log(`[IndexedDB] Migrando a la versión ${e.newVersion}...`);
+
+                    // Verificamos y creamos de forma segura las tablas de módulos
+                    APP_MODULE_STORES.forEach(storeName => {
                         if (!db.objectStoreNames.contains(storeName)) {
                             db.createObjectStore(storeName, { keyPath: 'internal_id', autoIncrement: true });
+                            console.log(`[IndexedDB] Almacén '${storeName}' creado exitosamente.`);
                         }
                     });
+
+                    // Verificamos y creamos de forma segura la tabla principal
                     if (!db.objectStoreNames.contains('tbInspecciones')) {
                         db.createObjectStore('tbInspecciones', { keyPath: 'id_inspeccion' });
+                        console.log(`[IndexedDB] Almacén 'tbInspecciones' creado exitosamente.`);
                     }
                 };
-                request.onsuccess = () => {
-                    dbInstance = request.result;
+
+                // 2. EVENTO DE ÉXITO
+                request.onsuccess = (e) => {
+                    dbInstance = e.target.result;
+
+                    // Manejador vital: Si otra pestaña intenta actualizar la versión de la DB,
+                    // cerramos nuestra conexión para no bloquear la actualización y avisamos.
+                    dbInstance.onversionchange = () => {
+                        dbInstance.close();
+                        console.warn("[IndexedDB] Base de datos desactualizada. Se requiere recargar la página.");
+                    };
+
                     resolve(dbInstance);
                 };
-                request.onerror = () => reject(request.error);
+
+                // 3. MANEJO DE ERRORES (ej. VersionError)
+                request.onerror = (e) => {
+                    console.error('[IndexedDB] Error crítico al abrir la base de datos:', e.target.error);
+                    reject(e.target.error);
+                };
+
+                // 4. PREVENCIÓN DE CONGELAMIENTO
+                request.onblocked = (e) => {
+                    console.warn('[IndexedDB] Conexión bloqueada. Hay pestañas abiertas con versiones anteriores.');
+                    alert("Atención: Por favor cierra las otras pestañas de esta aplicación para permitir la actualización de la base de datos.");
+                };
             });
         }
 
